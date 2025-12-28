@@ -30,7 +30,7 @@
             </div>
 
             <div class="w-full max-w-[400px] mx-auto">
-                {{ $slot }}
+                @yield('content')
             </div>
 
             <!-- Footer -->

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class BiodataController extends Controller
 {
@@ -35,22 +36,18 @@ class BiodataController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:500',
+            'photo' => ['nullable', 'mimes:jpg,jpeg,png', 'max:1024'],
         ]);
+
+        if ($request->hasFile('photo')) {
+            if ($user->profile_photo_path) {
+                Storage::disk('public')->delete($user->profile_photo_path);
+            }
+            $validated['profile_photo_path'] = $request->file('photo')->store('profile-photos', 'public');
+        }
 
         // Update user
-        $user->update([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-        ]);
-
-        // Update mahasiswa (if phone/address fields exist)
-        // Note: You may need to add these columns to mahasiswa table
-        // $mahasiswa->update([
-        //     'phone' => $validated['phone'],
-        //     'address' => $validated['address'],
-        // ]);
+        $user->update($validated);
 
         return redirect()->back()->with('success', 'Biodata berhasil diperbarui');
     }

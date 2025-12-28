@@ -69,6 +69,11 @@ class RuanganController extends Controller
 
     public function store(Request $request)
     {
+        // Handle checkbox value before validation
+        $request->merge([
+            'is_active' => $request->has('is_active'),
+        ]);
+
         $validated = $request->validate([
             'kode_ruangan' => 'required|string|max:20|unique:ruangan,kode_ruangan',
             'nama_ruangan' => 'required|string|max:100',
@@ -79,8 +84,6 @@ class RuanganController extends Controller
             'is_active' => 'boolean',
             'fakultas_id' => 'nullable|exists:fakultas,id',
         ]);
-
-        $validated['is_active'] = $request->has('is_active');
         
         // Auto-assign fakultas for admin_fakultas
         if (empty($validated['fakultas_id']) && $request->get('fakultas_scoped')) {
@@ -94,6 +97,11 @@ class RuanganController extends Controller
 
     public function update(Request $request, Ruangan $ruangan)
     {
+        // Handle checkbox value before validation
+        $request->merge([
+            'is_active' => $request->has('is_active'),
+        ]);
+
         $validated = $request->validate([
             'kode_ruangan' => 'required|string|max:20|unique:ruangan,kode_ruangan,' . $ruangan->id,
             'nama_ruangan' => 'required|string|max:100',
@@ -104,8 +112,6 @@ class RuanganController extends Controller
             'is_active' => 'boolean',
             'fakultas_id' => 'nullable|exists:fakultas,id',
         ]);
-
-        $validated['is_active'] = $request->has('is_active');
 
         $ruangan->update($validated);
 

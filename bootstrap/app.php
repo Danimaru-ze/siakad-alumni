@@ -40,6 +40,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'log.requests' => \App\Http\Middleware\RequestLoggingMiddleware::class,
             'fakultas.scope' => \App\Http\Middleware\FakultasScopeMiddleware::class,
+            'hrd.profile.complete' => \App\Http\Middleware\EnsureHrdProfileIsComplete::class,
+            'mahasiswa.aktif' => \App\Http\Middleware\EnsureIsMahasiswaAktif::class,
+            'is.alumni' => \App\Http\Middleware\EnsureIsAlumni::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

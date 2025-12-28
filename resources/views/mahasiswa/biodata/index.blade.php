@@ -9,9 +9,7 @@
             <!-- Profile Card -->
             <div class="card-saas p-6">
                 <div class="text-center mb-6">
-                    <div class="w-24 h-24 mx-auto rounded-xl bg-siakad-primary flex items-center justify-center text-white text-4xl font-bold mb-4">
-                        {{ strtoupper(substr($user->name, 0, 1)) }}
-                    </div>
+                    <img src="{{ Auth::user()->profile_photo_url }}" alt="{{ $user->name }}" class="w-24 h-24 mx-auto rounded-xl object-cover mb-4">
                     <h2 class="text-xl font-semibold text-siakad-dark">{{ $user->name }}</h2>
                     <p class="text-sm font-mono text-siakad-secondary">{{ $mahasiswa->nim }}</p>
                     <span class="inline-flex mt-2 px-3 py-1 text-xs font-semibold bg-emerald-100 text-emerald-700 rounded-full">
@@ -75,10 +73,32 @@
                     <h3 class="font-semibold text-siakad-dark">Informasi Akun</h3>
                     <p class="text-xs text-siakad-secondary mt-1">Perbarui informasi akun Anda</p>
                 </div>
-                <form action="{{ route('mahasiswa.biodata.update') }}" method="POST">
+                <form action="{{ Auth::user()->role === 'alumni' ? route('alumni.biodata.update') : route('mahasiswa.biodata.update') }}" method="POST" enctype="multipart/form-data" x-data="{photoName: null, photoPreview: null}">
                     @csrf
                     @method('PUT')
                     <div class="p-6 space-y-4">
+                        <!-- Profile Photo -->
+                        <div>
+                            <label class="block text-sm font-medium text-siakad-dark mb-2">Foto Profil</label>
+                            <div class="mt-1 flex items-center gap-4">
+                                <span class="h-20 w-20 rounded-xl overflow-hidden bg-gray-100">
+                                    <img x-show="!photoPreview" src="{{ Auth::user()->profile_photo_url }}" alt="Current Profile Photo" class="h-full w-full object-cover">
+                                    <div x-show="photoPreview" class="h-full w-full bg-cover bg-no-repeat bg-center" x-bind:style="'background-image: url(\'' + photoPreview + '\');'"></div>
+                                </span>
+                                <input type="file" name="photo" class="hidden" x-ref="photo" x-on:change="
+                                    photoName = $refs.photo.files[0].name;
+                                    const reader = new FileReader();
+                                    reader.onload = (e) => {
+                                        photoPreview = e.target.result;
+                                    };
+                                    reader.readAsDataURL($refs.photo.files[0]);
+                                ">
+                                <button type="button" class="btn-secondary-saas px-4 py-2 text-sm" x-on:click.prevent="$refs.photo.click()">
+                                    Ubah Foto
+                                </button>
+                            </div>
+                            <x-input-error :messages="$errors->get('photo')" class="mt-2" />
+                        </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-siakad-dark mb-2">Nama Lengkap</label>

@@ -18,6 +18,8 @@ class Mahasiswa extends Model
         'dosen_pa_id',
         'angkatan',
         'status',
+        'ipk',
+        'total_sks',
     ];
 
     public function user()

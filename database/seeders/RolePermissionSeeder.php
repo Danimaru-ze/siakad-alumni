@@ -16,80 +16,50 @@ class RolePermissionSeeder extends Seeder
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Create permissions
+        // --- PERMISSION DEFINITIONS ---
         $permissions = [
             // Mahasiswa management
-            'view mahasiswa',
-            'create mahasiswa',
-            'edit mahasiswa',
-            'delete mahasiswa',
-            
+            'view mahasiswa', 'create mahasiswa', 'edit mahasiswa', 'delete mahasiswa',
             // Dosen management
-            'view dosen',
-            'create dosen',
-            'edit dosen',
-            'delete dosen',
-            
+            'view dosen', 'create dosen', 'edit dosen', 'delete dosen',
             // Kelas management
-            'view kelas',
-            'create kelas',
-            'edit kelas',
-            'delete kelas',
-            
+            'view kelas', 'create kelas', 'edit kelas', 'delete kelas',
             // Mata Kuliah management
-            'view mata kuliah',
-            'create mata kuliah',
-            'edit mata kuliah',
-            'delete mata kuliah',
-            
+            'view mata kuliah', 'create mata kuliah', 'edit mata kuliah', 'delete mata kuliah',
             // KRS management
-            'view krs',
-            'approve krs',
-            'reject krs',
-            
+            'view krs', 'approve krs', 'reject krs',
             // Nilai management
-            'view nilai',
-            'input nilai',
-            
+            'view nilai', 'input nilai',
             // Skripsi management
-            'view skripsi',
-            'manage skripsi',
-            
+            'view skripsi', 'manage skripsi',
             // KP management
-            'view kp',
-            'manage kp',
-            
+            'view kp', 'manage kp',
             // User management
-            'view users',
-            'create users',
-            'edit users',
-            'delete users',
-            
+            'view users', 'create users', 'edit users', 'delete users',
             // Master data
-            'manage fakultas',
-            'manage prodi',
-            'manage tahun akademik',
-            'manage ruangan',
-            
+            'manage fakultas', 'manage prodi', 'manage tahun akademik', 'manage ruangan',
             // Reports
-            'view reports',
-            'export reports',
-            
+            'view reports', 'export reports',
             // Announcements
             'manage announcements',
+            
+            // --- NEW JOB PERMISSIONS ---
+            'job.view', 'job.create', 'job.edit_own', 'job.delete_own',
+            'job.approve', 'job.reject', 'job.edit_any', 'job.delete_any', 'job.flag'
         ];
 
+        // Create all permissions
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission]);
         }
 
-        // Create roles with permissions
-        
-        // Superadmin - has all permissions
+        // --- ROLE DEFINITIONS AND ASSIGNMENTS ---
+
+        // Superadmin - has all permissions (implicitly gets new ones)
         $superadmin = Role::firstOrCreate(['name' => 'superadmin']);
         $superadmin->givePermissionTo(Permission::all());
 
-        // Admin Fakultas - has most admin permissions but scoped to fakultas
+        // Admin Fakultas - has most admin permissions but scoped
         $adminFakultas = Role::firstOrCreate(['name' => 'admin_fakultas']);
         $adminFakultas->givePermissionTo([
             'view mahasiswa', 'create mahasiswa', 'edit mahasiswa',
@@ -97,30 +67,40 @@ class RolePermissionSeeder extends Seeder
             'view kelas', 'create kelas', 'edit kelas', 'delete kelas',
             'view mata kuliah', 'create mata kuliah', 'edit mata kuliah',
             'view krs', 'approve krs', 'reject krs',
-            'view nilai',
-            'view skripsi', 'manage skripsi',
-            'view kp', 'manage kp',
-            'manage prodi',
-            'manage ruangan',
-            'view reports', 'export reports',
-            'manage announcements',
+            'view nilai', 'view skripsi', 'manage skripsi',
+            'view kp', 'manage kp', 'manage prodi', 'manage ruangan',
+            'view reports', 'export reports', 'manage announcements',
+            // Job permissions for Admin Fakultas
+            'job.view', 'job.flag'
         ]);
 
         // Dosen - can view and input nilai, manage bimbingan
         $dosen = Role::firstOrCreate(['name' => 'dosen']);
         $dosen->givePermissionTo([
-            'view kelas',
-            'view nilai', 'input nilai',
-            'view skripsi',
-            'view kp',
-            'view mahasiswa',
+            'view kelas', 'view nilai', 'input nilai',
+            'view skripsi', 'view kp', 'view mahasiswa',
+            // Job permissions for Dosen
+            'job.view'
         ]);
 
-        // Mahasiswa - minimal permissions (most access via routes)
+        // Mahasiswa - minimal permissions
         $mahasiswa = Role::firstOrCreate(['name' => 'mahasiswa']);
-        // Mahasiswa typically don't need explicit permissions
-        // Their access is controlled by role middleware
+        // No job permissions for mahasiswa
 
-        $this->command->info('Roles and permissions created successfully!');
+        // --- NEW ROLES ---
+
+        // Alumni - can view published jobs
+        $alumni = Role::firstOrCreate(['name' => 'alumni']);
+        $alumni->givePermissionTo([
+            'job.view'
+        ]);
+
+        // HRD - can manage their own jobs
+        $hrd = Role::firstOrCreate(['name' => 'hrd']);
+        $hrd->givePermissionTo([
+            'job.view', 'job.create', 'job.edit_own', 'job.delete_own'
+        ]);
+
+        $this->command->info('Roles and permissions have been updated successfully!');
     }
 }

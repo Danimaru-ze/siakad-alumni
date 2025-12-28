@@ -28,14 +28,31 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        $user = Auth::user();
-        
-        // Redirect berdasarkan role
+        $user = $request->user();
+
+        // New redirection logic with priority on mahasiswa status
+        if ($user->mahasiswa) {
+            $status = $user->mahasiswa->status;
+            if ($status === 'lulus') {
+                return redirect()->intended(route('alumni.dashboard', absolute: false));
+            } elseif ($status === 'aktif') {
+                return redirect()->intended(route('mahasiswa.dashboard', absolute: false));
+            } else {
+                // For 'cuti', 'do', or other inactive statuses
+                Auth::guard('web')->logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return redirect()->route('login')->with('error', 'Status mahasiswa Anda saat ini ('.ucfirst($status).') tidak aktif. Silakan hubungi administrasi.');
+            }
+        }
+
+        // Fallback to role-based redirection for non-mahasiswa users
         $redirectRoute = match ($user->role) {
-            'mahasiswa' => 'mahasiswa.dashboard',
             'dosen' => 'dosen.dashboard',
             'superadmin', 'admin_fakultas' => 'admin.dashboard',
-            default => 'dashboard',
+            'hrd' => 'hrd.dashboard',
+            'alumni' => 'alumni.dashboard', 
+            default => 'login',
         };
 
         return redirect()->intended(route($redirectRoute, absolute: false));

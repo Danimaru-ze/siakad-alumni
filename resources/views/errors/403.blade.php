@@ -68,8 +68,8 @@
             </svg>
         </div>
         <h1>Akses Ditolak</h1>
-        <p>{{ $message ?? 'Anda tidak memiliki izin untuk mengakses halaman ini.' }}</p>
-        <a href="{{ url('/dashboard') }}">Kembali ke Dashboard</a>
+        <p>{{ $exception->getMessage() ?: 'Anda tidak memiliki izin untuk mengakses halaman ini.' }}</p>
+        <a href="{{ url('/') }}">Kembali ke Halaman Utama</a>
     </div>
 </body>
 </html>

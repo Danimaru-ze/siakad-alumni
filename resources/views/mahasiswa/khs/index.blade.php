@@ -42,7 +42,10 @@
             // Use system palette colors instead of Tailwind defaults
             $ipsColor = $item['ips'] >= 3.5 ? '#234C6A' : ($item['ips'] >= 3.0 ? '#456882' : ($item['ips'] >= 2.5 ? '#F59E0B' : '#EF4444'));
         @endphp
-        <a href="{{ route('mahasiswa.khs.show', $ta) }}" class="card-saas group overflow-hidden hover:ring-2 hover:ring-siakad-primary transition-all">
+        @php
+            $route = Auth::user()->role === 'alumni' ? 'alumni.khs.show' : 'mahasiswa.khs.show';
+        @endphp
+        <a href="{{ route($route, $ta) }}" class="card-saas group overflow-hidden hover:ring-2 hover:ring-siakad-primary transition-all">
             <div class="p-6">
                 <div class="flex items-start justify-between mb-4">
                     <div>

@@ -215,6 +215,15 @@ class MahasiswaController extends Controller
         $mahasiswa->load(['user', 'prodi.fakultas', 'krs.tahunAkademik', 'krs.krsDetail.kelas.mataKuliah']);
         
         $ipkData = $this->calculationService->calculateIPK($mahasiswa);
+        
+        // Simpan IPK & SKS yang baru dihitung ke database
+        if (isset($ipkData['ipk']) && isset($ipkData['total_sks'])) {
+            $mahasiswa->update([
+                'ipk' => $ipkData['ipk'],
+                'total_sks' => $ipkData['total_sks'],
+            ]);
+        }
+        
         $ipsHistory = $this->calculationService->getIPSHistory($mahasiswa);
         $gradeDistribution = $this->calculationService->getGradeDistribution($mahasiswa);
 

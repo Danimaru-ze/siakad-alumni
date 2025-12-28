@@ -287,6 +287,20 @@
                         <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Fasilitas</label>
                         <textarea name="fasilitas" rows="2" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white" placeholder="AC, Proyektor, Whiteboard"></textarea>
                     </div>
+
+                    @if (auth()->user()->isSuperAdmin() && $fakultasList->isNotEmpty())
+                    <div>
+                        <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Fakultas (Opsional)</label>
+                        <select name="fakultas_id" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white">
+                            <option value="">Umum / Tidak terikat fakultas</option>
+                            @foreach ($fakultasList as $fakultas)
+                                <option value="{{ $fakultas->id }}">{{ $fakultas->nama }}</option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-siakad-secondary mt-1">Biarkan kosong untuk menjadikan ruangan umum yang bisa diakses semua fakultas.</p>
+                    </div>
+                    @endif
+
                     <div class="flex items-center gap-2">
                         <input type="checkbox" name="is_active" id="createIsActive" checked class="rounded border-siakad-light text-siakad-primary focus:ring-siakad-primary dark:border-gray-700 dark:bg-gray-900">
                         <label for="createIsActive" class="text-sm text-siakad-dark dark:text-gray-300">Ruangan aktif</label>
@@ -337,6 +351,20 @@
                         <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Fasilitas</label>
                         <textarea name="fasilitas" id="editFasilitas" rows="2" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white"></textarea>
                     </div>
+
+                    @if (auth()->user()->isSuperAdmin() && $fakultasList->isNotEmpty())
+                    <div id="editFakultasWrapper">
+                        <label class="block text-sm font-medium text-siakad-dark dark:text-gray-300 mb-2">Fakultas (Opsional)</label>
+                        <select name="fakultas_id" id="editFakultas" class="input-saas w-full px-4 py-2.5 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-white">
+                            <option value="">Umum / Tidak terikat fakultas</option>
+                            @foreach ($fakultasList as $fakultas)
+                                <option value="{{ $fakultas->id }}">{{ $fakultas->nama }}</option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-siakad-secondary mt-1">Biarkan kosong untuk menjadikan ruangan umum yang bisa diakses semua fakultas.</p>
+                    </div>
+                    @endif
+                    
                     <div class="flex items-center gap-2">
                         <input type="checkbox" name="is_active" id="editIsActive" class="rounded border-siakad-light text-siakad-primary focus:ring-siakad-primary dark:border-gray-700 dark:bg-gray-900">
                         <label for="editIsActive" class="text-sm text-siakad-dark dark:text-gray-300">Ruangan aktif</label>
@@ -360,6 +388,14 @@
             document.getElementById('editLantai').value = data.lantai || '';
             document.getElementById('editFasilitas').value = data.fasilitas || '';
             document.getElementById('editIsActive').checked = data.is_active;
+
+            @if (auth()->user()->isSuperAdmin())
+            const fakultasSelect = document.getElementById('editFakultas');
+            if (fakultasSelect) {
+                fakultasSelect.value = data.fakultas_id || '';
+            }
+            @endif
+            
             document.getElementById('editModal').classList.remove('hidden');
         }
     </script>

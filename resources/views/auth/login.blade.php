@@ -1,4 +1,6 @@
-<x-guest-layout>
+@extends('layouts.guest')
+
+@section('content')
     <div class="mb-10">
         <h2 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Welcome back</h2>
         <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Please enter your details to sign in.</p>
@@ -10,9 +12,9 @@
     <form method="POST" action="{{ route('login') }}" class="space-y-6">
         @csrf
 
-        <!-- Email Address -->
+        <!-- Login Identifier (Email or NIM) -->
         <div class="relative group">
-            <x-input-label for="email" :value="__('Email address')" class="sr-only" />
+            <x-input-label for="login" :value="__('Email address or NIM')" class="sr-only" />
             <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <svg class="h-5 w-5 text-gray-400 group-focus-within:text-siakad-primary transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -20,17 +22,17 @@
                         <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                     </svg>
                 </div>
-                <input id="email" 
+                <input id="login" 
                        class="block w-full pl-11 pr-4 py-3.5 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-siakad-primary focus:border-siakad-primary transition-all duration-200 outline-none placeholder-gray-400 dark:placeholder-gray-500 font-medium sm:text-sm" 
-                       type="email" 
-                       name="email" 
-                       value="{{ old('email') }}" 
+                       type="text" 
+                       name="login" 
+                       value="{{ old('login') }}" 
                        required 
                        autofocus 
-                       autocomplete="username" 
-                       placeholder="Enter your email" />
+                       autocomplete="login" 
+                       placeholder="Enter your Email or NIM" />
             </div>
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+            <x-input-error :messages="$errors->get('login')" class="mt-2" />
         </div>
 
         <!-- Password -->
@@ -102,4 +104,5 @@
             Having trouble? <a href="#" class="font-medium text-siakad-primary hover:text-siakad-dark dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors">Contact Support</a>
         </p>
     </form>
-</x-guest-layout>
+@endsection
+

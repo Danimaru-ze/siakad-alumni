@@ -254,6 +254,76 @@ class DatabaseSeeder extends Seeder
             KrsDetail::create(['krs_id' => $krsSekarang->id, 'kelas_id' => $kelas5->id]);
         }
 
+                // ==========================================
+        // 12. ALUMNI (LULUSAN)
+        // ==========================================
+        $alumniUser = User::create([
+            'name' => 'Andi Pratama',
+            'email' => 'alumni@siakad.test',
+            'password' => Hash::make('password'),
+            'role' => 'alumni',
+        ]);
+
+        // Alumni berasal dari mahasiswa angkatan lama (contoh)
+        $alumni = Mahasiswa::create([
+            'user_id' => $alumniUser->id,
+            'nim' => '2019102001',
+            'prodi_id' => $prodi->id,
+            'angkatan' => 2019,
+            'dosen_pa_id' => $dosen->id,
+            'status' => 'lulus',
+        ]);
+
+        // ==========================================
+        // 13. RIWAYAT NILAI ALUMNI (LENGKAP)
+        // ==========================================
+        $taAlumniGanjil = TahunAkademik::create([
+            'tahun' => '2019/2020',
+            'semester' => 'Ganjil',
+            'is_active' => false,
+            'tanggal_mulai' => '2019-09-01',
+            'tanggal_selesai' => '2020-01-31',
+        ]);
+
+        $krsAlumni = Krs::create([
+            'mahasiswa_id' => $alumni->id,
+            'tahun_akademik_id' => $taAlumniGanjil->id,
+            'status' => 'approved',
+        ]);
+
+        foreach (MataKuliah::where('semester', 1)->get() as $mk) {
+            $kelasAlumni = Kelas::create([
+                'mata_kuliah_id' => $mk->id,
+                'dosen_id' => $dosen->id,
+                'nama_kelas' => 'A',
+                'kapasitas' => 40,
+                'tahun_akademik_id' => $taAlumniGanjil->id,
+            ]);
+
+            KrsDetail::create([
+                'krs_id' => $krsAlumni->id,
+                'kelas_id' => $kelasAlumni->id,
+            ]);
+
+            $nilaiAngka = rand(70, 90);
+            Nilai::create([
+                'mahasiswa_id' => $alumni->id,
+                'kelas_id' => $kelasAlumni->id,
+                'nilai_angka' => $nilaiAngka,
+                'nilai_huruf' => $this->convertToLetter($nilaiAngka),
+            ]);
+        }
+
+        // ==========================================
+        // 14. HRD (PERUSAHAAN / REKRUTER)
+        // ==========================================
+        $hrdUser = User::create([
+            'name' => 'HRD PT Teknologi Nusantara',
+            'email' => 'hrd@company.test',
+            'password' => Hash::make('password'),
+            'role' => 'hrd',
+        ]);
+
         // ==========================================
         // OUTPUT
         // ==========================================

@@ -10,44 +10,150 @@ use App\Http\Controllers\Admin\KelasController;
 use App\Http\Controllers\Admin\TahunAkademikController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\KrsApprovalController;
-use App\Http\Controllers\Admin\MahasiswaController;
+use App\Http\Controllers\Admin\MahasiswaController as AdminMahasiswaController;
 use App\Http\Controllers\Admin\DosenController;
 use App\Http\Controllers\Mahasiswa\KrsController;
 use App\Http\Controllers\Mahasiswa\TranskripController;
 use App\Http\Controllers\Dosen\PenilaianController;
 use App\Http\Controllers\HealthController;
 
+// Job Module Controllers
+use App\Http\Controllers\Superadmin\JobModerationController;
+use App\Http\Controllers\AdminFakultas\JobMonitoringController;
+use App\Http\Controllers\Dosen\JobReferenceController;
+use App\Http\Controllers\HRD\JobController as HrdJobController;
+use App\Http\Controllers\Alumni\JobBoardController;
+use App\Http\Controllers\HRD\DashboardController as HrdDashboardController;
+use App\Http\Controllers\Alumni\DashboardController as AlumniDashboardController;
+use App\Http\Controllers\Alumni\BiodataController as AlumniBiodataController;
+use App\Http\Controllers\Alumni\TranskripController as AlumniTranskripController;
+use App\Http\Controllers\Alumni\KhsController as AlumniKhsController;
+use App\Http\Controllers\Alumni\PresensiController as AlumniPresensiController;
+use App\Http\Controllers\HRD\ProfileController as HrdProfileController;
+use App\Http\Controllers\Admin\AlumniController as AdminAlumniController;
+use App\Http\Controllers\HRD\AlumniController as HrdAlumniController;
+use App\Models\Mahasiswa;
+use Illuminate\Support\Facades\DB;
+
 // Health check routes (no auth required)
 Route::get('/health', [HealthController::class, 'index'])->name('health');
 Route::get('/health/detailed', [HealthController::class, 'detailed'])->name('health.detailed');
 
-// Redirect root to login page
-Route::get('/', function () {
-    return redirect()->route('login');
+// ======================================================================
+// !! TEMPORARY ROUTE TO FIX EXISTING DATA !!
+// This route will find all students with status 'lulus' but whose user role
+// is not 'alumni', and update their role accordingly.
+// This should be removed after being run once.
+// ======================================================================
+Route::get('/sync-alumni-roles-once', function () {
+    if (!Auth::check() || !in_array(Auth::user()->role, ['superadmin', 'admin_fakultas'])) {
+        abort(403, 'Hanya admin yang dapat mengakses halaman ini.');
+    }
+
+    $log = [];
+    $updatedCount = 0;
+
+    DB::beginTransaction();
+    try {
+        // Case 1: Mahasiswa is 'lulus' but User role is not 'alumni' -> FIX: set role to 'alumni'
+        $graduatesToUpdate = Mahasiswa::where('status', 'lulus')->whereHas('user', function ($query) {
+            $query->where('role', '!=', 'alumni');
+        })->with('user')->get();
+
+        foreach ($graduatesToUpdate as $mahasiswa) {
+            $log[] = "SYNC LULUS -> ALUMNI: Updating User ID: {$mahasiswa->user->id} (NIM: {$mahasiswa->nim}). Role was '{$mahasiswa->user->role}', changing to 'alumni'.";
+            $mahasiswa->user->role = 'alumni';
+            $mahasiswa->user->save();
+            $updatedCount++;
+        }
+
+        // Case 2: Mahasiswa is NOT 'lulus' but User role IS 'alumni' -> FIX: set role to 'mahasiswa'
+        $alumniToRevert = Mahasiswa::where('status', '!=', 'lulus')->whereHas('user', function ($query) {
+            $query->where('role', 'alumni');
+        })->with('user')->get();
+
+        foreach ($alumniToRevert as $mahasiswa) {
+            $log[] = "SYNC ALUMNI -> MAHASISWA: Updating User ID: {$mahasiswa->user->id} (NIM: {$mahasiswa->nim}). Status is '{$mahasiswa->status}', changing role from 'alumni' to 'mahasiswa'.";
+            $mahasiswa->user->role = 'mahasiswa';
+            $mahasiswa->user->save();
+            $updatedCount++;
+        }
+
+        DB::commit();
+        
+        if($updatedCount === 0) {
+            $log[] = "Tidak ada data yang perlu disinkronisasi. Semua role sudah konsisten dengan status mahasiswa.";
+        }
+
+        return response()->json([
+            'message' => "Proses sinkronisasi dua arah selesai. Total {$updatedCount} pengguna diperbarui.",
+            'log' => $log,
+        ]);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'message' => 'Terjadi kesalahan selama sinkronisasi.',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
 });
 
-// Redirect generic dashboard to role-specific dashboard
-Route::get('/dashboard', function () {
-    $user = auth()->user();
-    
-    return match($user->role) {
-        'superadmin', 'admin_fakultas' => redirect()->route('admin.dashboard'),
-        'dosen' => redirect()->route('dosen.dashboard'),
-        'mahasiswa' => redirect()->route('mahasiswa.dashboard'),
-        default => redirect()->route('login'),
-    };
-})->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('post-login');
+    }
+
+    return redirect()->route('login');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
+    
     // Notifications
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/unread-count', [\App\Http\Controllers\NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
     Route::post('/notifications/{notification}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     Route::post('/notifications/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+});
+
+// --- HRD DASHBOARD ROUTE ---
+Route::middleware(['auth', 'role:hrd'])->prefix('hrd')->name('hrd.')->group(function () {
+    Route::get('/dashboard', [HrdDashboardController::class, 'index'])->name('dashboard');
+
+    // HRD Biodata
+    Route::get('/biodata', [\App\Http\Controllers\HRD\BiodataController::class, 'index'])->name('biodata.index');
+    Route::put('/biodata', [\App\Http\Controllers\HRD\BiodataController::class, 'update'])->name('biodata.update');
+    Route::put('/biodata/password', [\App\Http\Controllers\HRD\BiodataController::class, 'updatePassword'])->name('biodata.password');
+
+    // HRD Company Profile Setup & Management
+    Route::get('/company-profile/setup', [\App\Http\Controllers\HRD\CompanyProfileController::class, 'create'])->name('company-profile.create');
+    Route::post('/company-profile', [\App\Http\Controllers\HRD\CompanyProfileController::class, 'store'])->name('company-profile.store');
+    Route::get('/company-profile', [\App\Http\Controllers\HRD\CompanyProfileController::class, 'index'])->name('company-profile.index');
+    Route::put('/company-profile', [\App\Http\Controllers\HRD\CompanyProfileController::class, 'update'])->name('company-profile.update');
+});
+
+// --- ALUMNI DASHBOARD ROUTE ---
+Route::middleware(['auth', 'is.alumni'])->prefix('alumni')->name('alumni.')->group(function () {
+    Route::get('/dashboard', [AlumniDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/biodata', [AlumniBiodataController::class, 'index'])->name('biodata.index');
+    Route::put('/biodata', [AlumniBiodataController::class, 'update'])->name('biodata.update');
+    Route::put('/biodata/password', [AlumniBiodataController::class, 'updatePassword'])->name('biodata.password');
+    Route::get('/transkrip', [AlumniTranskripController::class, 'index'])->name('transkrip.index');
+    Route::get('/export/transkrip', [AlumniTranskripController::class, 'export'])->name('export.transkrip');
+    Route::get('/khs', [AlumniKhsController::class, 'index'])->name('khs.index');
+    Route::get('/khs/{tahunAkademik}', [AlumniKhsController::class, 'show'])->name('khs.show');
+    Route::get('/presensi', [AlumniPresensiController::class, 'index'])->name('presensi.index');
+    Route::get('/presensi/{kelas}', [AlumniPresensiController::class, 'show'])->name('presensi.show');
+    
+    // Alumni Tracer Study
+    // Definisikan secara manual untuk menghindari konflik
+    Route::get('tracer', [\App\Http\Controllers\Alumni\TracerStudyController::class, 'index'])->name('tracer.index');
+    Route::get('tracer/{tracer}', [\App\Http\Controllers\Alumni\TracerStudyController::class, 'show'])->name('tracer.show');
+    Route::post('tracer/{tracer}', [\App\Http\Controllers\Alumni\TracerStudyController::class, 'store'])->name('tracer.store.submit');
 });
 
 // --- ADMIN ROUTES ---
@@ -103,12 +209,12 @@ Route::middleware(['auth', 'role:admin', 'fakultas.scope'])->prefix('admin')->na
     Route::get('/krs-approval/{krs}', [KrsApprovalController::class, 'show'])->name('krs-approval.show');
 
     // Mahasiswa Management
-    Route::get('/mahasiswa/export', [MahasiswaController::class, 'export'])->name('mahasiswa.export');
-    Route::get('/mahasiswa', [MahasiswaController::class, 'index'])->name('mahasiswa.index');
-    Route::post('/mahasiswa', [MahasiswaController::class, 'store'])->name('mahasiswa.store');
-    Route::get('/mahasiswa/{mahasiswa}', [MahasiswaController::class, 'show'])->name('mahasiswa.show');
-    Route::put('/mahasiswa/{mahasiswa}', [MahasiswaController::class, 'update'])->name('mahasiswa.update');
-    Route::delete('/mahasiswa/{mahasiswa}', [MahasiswaController::class, 'destroy'])->name('mahasiswa.destroy');
+    Route::get('/mahasiswa/export', [AdminMahasiswaController::class, 'export'])->name('mahasiswa.export');
+    Route::get('/mahasiswa', [AdminMahasiswaController::class, 'index'])->name('mahasiswa.index');
+    Route::post('/mahasiswa', [AdminMahasiswaController::class, 'store'])->name('mahasiswa.store');
+    Route::get('/mahasiswa/{mahasiswa}', [AdminMahasiswaController::class, 'show'])->name('mahasiswa.show');
+    Route::put('/mahasiswa/{mahasiswa}', [AdminMahasiswaController::class, 'update'])->name('mahasiswa.update');
+    Route::delete('/mahasiswa/{mahasiswa}', [AdminMahasiswaController::class, 'destroy'])->name('mahasiswa.destroy');
 
     // Dosen Management
     Route::get('/dosen/export', [DosenController::class, 'export'])->name('dosen.export');
@@ -117,6 +223,9 @@ Route::middleware(['auth', 'role:admin', 'fakultas.scope'])->prefix('admin')->na
     Route::get('/dosen/{dosen}', [DosenController::class, 'show'])->name('dosen.show');
     Route::put('/dosen/{dosen}', [DosenController::class, 'update'])->name('dosen.update');
     Route::delete('/dosen/{dosen}', [DosenController::class, 'destroy'])->name('dosen.destroy');
+
+    // HRD Management
+    Route::resource('/hrd', \App\Http\Controllers\Admin\HrdController::class);
 
     // Ruangan Management
     Route::get('/ruangan', [\App\Http\Controllers\Admin\RuanganController::class, 'index'])->name('ruangan.index');
@@ -141,10 +250,21 @@ Route::middleware(['auth', 'role:admin', 'fakultas.scope'])->prefix('admin')->na
     // Kehadiran Dosen
     Route::get('/kehadiran-dosen', [\App\Http\Controllers\Admin\KehadiranDosenController::class, 'index'])->name('kehadiran-dosen.index');
     Route::get('/kehadiran-dosen/{dosen}', [\App\Http\Controllers\Admin\KehadiranDosenController::class, 'show'])->name('kehadiran-dosen.show');
+
+    // Alumni List
+    Route::get('/alumni', [AdminAlumniController::class, 'index'])->name('alumni.index');
+
+    // Tracer Study
+    Route::resource('tracer', \App\Http\Controllers\Admin\TracerStudyController::class)->except(['show']);
+    Route::get('/tracer/{tracer}/results', [\App\Http\Controllers\Admin\TracerStudyController::class, 'results'])->name('tracer.results');
+    Route::get('/tracer/{tracer}/export', [\App\Http\Controllers\Admin\TracerStudyController::class, 'export'])->name('tracer.export');
+
+
+    
 });
 
 // --- MAHASISWA ROUTES ---
-Route::middleware(['auth', 'role:mahasiswa'])->prefix('mahasiswa')->name('mahasiswa.')->group(function () {
+Route::middleware(['auth', 'mahasiswa.aktif'])->prefix('mahasiswa')->name('mahasiswa.')->group(function () {
     // Dashboard
     Route::get('/dashboard', [\App\Http\Controllers\Mahasiswa\DashboardController::class, 'index'])->name('dashboard');
 
@@ -212,6 +332,11 @@ Route::middleware(['auth', 'role:dosen'])->prefix('dosen')->name('dosen.')->grou
     // Dashboard
     Route::get('/dashboard', [\App\Http\Controllers\Dosen\DashboardController::class, 'index'])->name('dashboard');
 
+    // Biodata
+    Route::get('/biodata', [\App\Http\Controllers\Dosen\BiodataController::class, 'index'])->name('biodata.index');
+    Route::put('/biodata', [\App\Http\Controllers\Dosen\BiodataController::class, 'update'])->name('biodata.update');
+    Route::put('/biodata/password', [\App\Http\Controllers\Dosen\BiodataController::class, 'updatePassword'])->name('biodata.password');
+
     // E-Learning (LMS)
     Route::get('/lms', [\App\Http\Controllers\Dosen\LmsController::class, 'index'])->name('lms.index');
 
@@ -267,5 +392,66 @@ Route::middleware(['auth', 'role:dosen'])->prefix('dosen')->name('dosen.')->grou
     Route::delete('/tugas/{kelas}/{tugas}', [\App\Http\Controllers\Dosen\TugasController::class, 'destroy'])->name('tugas.destroy');
     Route::get('/tugas/{kelas}/submission/{submission}/download', [\App\Http\Controllers\Dosen\TugasController::class, 'downloadSubmission'])->name('tugas.submission.download');
 });
+
+// --- JOB VACANCY ROUTES ---
+
+// Superadmin: Job Moderation
+Route::middleware(['auth', 'role:superadmin'])->prefix('admin/jobs')->name('superadmin.jobs.')->group(function() {
+    Route::get('/', [JobModerationController::class, 'index'])->name('index');
+    Route::get('/{job}', [JobModerationController::class, 'show'])->name('show');
+    Route::post('/{job}/approve', [JobModerationController::class, 'approve'])->name('approve');
+    Route::post('/{job}/reject', [JobModerationController::class, 'reject'])->name('reject');
+    Route::delete('/{job}', [JobModerationController::class, 'destroy'])->name('destroy');
+});
+
+// Admin Fakultas: Job Monitoring
+Route::middleware(['auth', 'role:admin'])->prefix('admin/jobs-monitoring')->name('admin_fakultas.jobs.')->group(function() {
+    Route::get('/', [JobMonitoringController::class, 'index'])->name('index');
+    Route::get('/{job}', [JobMonitoringController::class, 'show'])->name('show');
+    Route::post('/{job}/flag', [JobMonitoringController::class, 'flag'])->name('flag');
+});
+
+
+
+// Dosen: Job Reference
+Route::middleware(['auth', 'role:dosen'])->prefix('dosen/jobs')->name('dosen.jobs.')->group(function() {
+    Route::get('/', [JobReferenceController::class, 'index'])->name('index');
+});
+
+    // HRD: Job Management & Alumni
+    Route::middleware(['auth', 'role:hrd', 'hrd.profile.complete'])->prefix('hrd')->name('hrd.')->group(function() {
+        Route::get('/jobs', [HrdJobController::class, 'index'])->name('jobs.index');
+        Route::get('/jobs/create', [HrdJobController::class, 'create'])->name('jobs.create');
+        Route::post('/jobs', [HrdJobController::class, 'store'])->name('jobs.store');
+        Route::get('/jobs/{job}/edit', [HrdJobController::class, 'edit'])->name('jobs.edit');
+        Route::put('/jobs/{job}', [HrdJobController::class, 'update'])->name('jobs.update');
+        Route::delete('/jobs/{job}', [HrdJobController::class, 'destroy'])->name('jobs.destroy');
+        Route::post('/jobs/{job}/submit', [HrdJobController::class, 'submit'])->name('jobs.submit');
+
+        // HRD Job Board
+        Route::get('/job-board', [\App\Http\Controllers\HRD\JobBoardController::class, 'index'])->name('job-board.index');
+        Route::get('/job-board/{job}', [\App\Http\Controllers\HRD\JobBoardController::class, 'show'])->name('job-board.show');
+
+        // Alumni List
+        Route::get('/alumni', [HrdAlumniController::class, 'index'])->name('alumni.index');
+    });
+// Alumni: Job Board
+Route::middleware(['auth', 'is.alumni'])->prefix('alumni/jobs')->name('alumni.jobs.')->group(function() {
+    Route::get('/', [JobBoardController::class, 'index'])->name('index');
+    Route::get('/{job}', [JobBoardController::class, 'show'])->name('show');
+});
+
+Route::get('/post-login', function () {
+    $user = auth()->user();
+
+    return match ($user->role) {
+        'superadmin', 'admin_fakultas' => redirect()->route('admin.dashboard'),
+        'hrd' => redirect()->route('hrd.dashboard'),
+        'dosen' => redirect()->route('dosen.dashboard'),
+        'mahasiswa' => redirect()->route('mahasiswa.dashboard'),
+        'alumni' => redirect()->route('alumni.dashboard'),
+        default => redirect()->route('login'), // Fallback aman
+    };
+})->middleware('auth')->name('post-login');
 
 require __DIR__.'/auth.php';
