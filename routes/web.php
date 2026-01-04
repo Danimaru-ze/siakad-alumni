@@ -178,6 +178,11 @@ Route::middleware(['auth', 'role:admin', 'fakultas.scope'])->prefix('admin')->na
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Biodata
+    Route::get('/biodata', [\App\Http\Controllers\Admin\BiodataController::class, 'index'])->name('biodata.index');
+    Route::put('/biodata', [\App\Http\Controllers\Admin\BiodataController::class, 'update'])->name('biodata.update');
+    Route::put('/biodata/password', [\App\Http\Controllers\Admin\BiodataController::class, 'updatePassword'])->name('biodata.password');
+
     // Users
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
 
@@ -419,6 +424,13 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('admin/jobs')->name('supe
     Route::post('/{job}/approve', [JobModerationController::class, 'approve'])->name('approve');
     Route::post('/{job}/reject', [JobModerationController::class, 'reject'])->name('reject');
     Route::delete('/{job}', [JobModerationController::class, 'destroy'])->name('destroy');
+});
+
+// Superadmin: General Settings
+Route::middleware(['auth', 'role:superadmin'])->prefix('admin/settings')->name('superadmin.settings.')->group(function() {
+    Route::get('/', [\App\Http\Controllers\Superadmin\SettingController::class, 'index'])->name('index');
+    Route::put('/', [\App\Http\Controllers\Superadmin\SettingController::class, 'update'])->name('update');
+    Route::delete('/reset', [\App\Http\Controllers\Superadmin\SettingController::class, 'reset'])->name('reset');
 });
 
 // Admin Fakultas: Job Monitoring

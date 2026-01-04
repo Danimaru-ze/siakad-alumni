@@ -71,6 +71,11 @@ class User extends Authenticatable
         return $this->belongsTo(Fakultas::class);
     }
 
+    public function adminProfile(): HasOne
+    {
+        return $this->hasOne(AdminProfile::class);
+    }
+
     public function alumniProfile(): HasOne
     {
         return $this->hasOne(AlumniProfile::class);

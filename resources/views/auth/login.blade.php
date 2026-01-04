@@ -2,8 +2,8 @@
 
 @section('content')
     <div class="mb-10">
-        <h2 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Welcome back</h2>
-        <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Please enter your details to sign in.</p>
+        <h2 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Selamat Datang</h2>
+        <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Silakan masukkan detail akun Anda untuk masuk.</p>
     </div>
 
     <!-- Session Status -->
@@ -14,7 +14,7 @@
 
         <!-- Login Identifier (Email or NIM) -->
         <div class="relative group">
-            <x-input-label for="login" :value="__('Email address or NIM')" class="sr-only" />
+            <x-input-label for="login" :value="__('Email atau NIM')" class="sr-only" />
             <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <svg class="h-5 w-5 text-gray-400 group-focus-within:text-siakad-primary transition-colors duration-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -30,14 +30,14 @@
                        required 
                        autofocus 
                        autocomplete="login" 
-                       placeholder="Enter your Email or NIM" />
+                       placeholder="Masukkan Email atau NIM" />
             </div>
             <x-input-error :messages="$errors->get('login')" class="mt-2" />
         </div>
 
         <!-- Password -->
         <div class="relative group">
-            <x-input-label for="password" :value="__('Password')" class="sr-only" />
+            <x-input-label for="password" :value="__('Kata Sandi')" class="sr-only" />
             
             <div class="relative" x-data="{ show: false }">
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -51,7 +51,7 @@
                        name="password"
                        required 
                        autocomplete="current-password"
-                       placeholder="Enter your password" />
+                       placeholder="Masukkan kata sandi" />
                 
                 <button type="button" @click="show = !show" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
                     <svg class="h-5 w-5" x-show="!show" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -79,21 +79,21 @@
                                name="remember">
                     </div>
                     <div class="ml-2 text-sm">
-                        <span class="text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors">{{ __('Remember for 30 days') }}</span>
+                        <span class="text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors">{{ __('Ingat saya') }}</span>
                     </div>
                 </div>
             </label>
 
             @if (Route::has('password.request'))
                 <a class="text-sm font-medium text-siakad-primary hover:text-siakad-dark dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors" href="{{ route('password.request') }}">
-                    {{ __('Forgot password?') }}
+                    {{ __('Lupa kata sandi?') }}
                 </a>
             @endif
         </div>
 
         <div class="pt-2">
             <button type="submit" class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-siakad-primary hover:bg-siakad-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-siakad-primary transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-lg">
-                {{ __('Sign in') }}
+                {{ __('Masuk') }}
             </button>
         </div>
 
@@ -101,7 +101,7 @@
         <!-- Future: Social Login -->
         
         <p class="text-center text-xs text-gray-500 dark:text-gray-400 mt-8">
-            Having trouble? <a href="#" class="font-medium text-siakad-primary hover:text-siakad-dark dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors">Contact Support</a>
+            Butuh bantuan? <a href="#" class="font-medium text-siakad-primary hover:text-siakad-dark dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors">Hubungi Dukungan IT</a>
         </p>
     </form>
 @endsection

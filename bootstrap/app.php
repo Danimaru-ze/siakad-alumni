@@ -31,6 +31,9 @@ return Application::configure(basePath: dirname(__DIR__))
             });
         },
     )
+    ->withProviders([
+        \App\Providers\ViewServiceProvider::class,
+    ])
     ->withMiddleware(function (Middleware $middleware): void {
         // Global middleware - applies to all requests
         $middleware->append(\App\Http\Middleware\SecurityHeadersMiddleware::class);

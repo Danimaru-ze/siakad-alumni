@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ $site_settings['site_title'] ?? config('app.name', 'Laravel') }}</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -22,10 +22,14 @@
             <!-- Mobile Logo -->
             <div class="lg:hidden absolute top-8 left-8">
                 <a href="/" class="flex items-center gap-2">
-                    <div class="w-10 h-10 rounded-xl bg-siakad-primary flex items-center justify-center text-white">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    <div class="w-10 h-10 rounded-xl bg-siakad-primary flex items-center justify-center text-white overflow-hidden">
+                         @if(isset($site_settings['university_logo']))
+                            <img src="{{ asset('storage/' . $site_settings['university_logo']) }}" alt="Logo" class="w-full h-full object-cover">
+                        @else
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                        @endif
                     </div>
-                    <span class="font-bold text-xl text-siakad-dark dark:text-white">{{ config('app.name') }}</span>
+                    <span class="font-bold text-xl text-siakad-dark dark:text-white">{{ $site_settings['site_title'] ?? config('app.name') }}</span>
                 </a>
             </div>
 
@@ -35,7 +39,7 @@
 
             <!-- Footer -->
             <div class="absolute bottom-8 left-0 right-0 text-center text-xs text-gray-400 dark:text-gray-500">
-                &copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
+                {{ $site_settings['footer_text'] ?? '© ' . date('Y') . ' ' . config('app.name') . '. All rights reserved.' }}
             </div>
         </div>
 
@@ -54,13 +58,17 @@
                 <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative overflow-hidden group hover:bg-white/10 transition-colors duration-500">
                     <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                     
-                    <div class="w-20 h-20 bg-gradient-to-br from-indigo-400 to-cyan-300 rounded-2xl mx-auto mb-8 flex items-center justify-center shadow-lg shadow-indigo-500/30 transform group-hover:scale-110 transition-transform duration-500">
-                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    <div class="w-24 h-24 bg-gradient-to-br from-indigo-400/20 to-cyan-300/20 rounded-2xl mx-auto mb-8 flex items-center justify-center shadow-lg shadow-indigo-500/10 transform group-hover:scale-110 transition-transform duration-500 overflow-hidden bg-white/10">
+                        @if(isset($site_settings['university_logo']))
+                            <img src="{{ asset('storage/' . $site_settings['university_logo']) }}" alt="Logo" class="w-full h-full object-contain p-2">
+                        @else
+                            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                        @endif
                     </div>
 
-                    <h2 class="text-3xl font-bold text-white mb-4 tracking-tight">Kulim SIAKAD-AI</h2>
+                    <h2 class="text-3xl font-bold text-white mb-4 tracking-tight">{{ $site_settings['login_title'] ?? 'SIAKAD Academic Management' }}</h2>
                     <p class="text-indigo-100/80 text-lg leading-relaxed">
-                        Platform manajemen akademik modern berbasis AI untuk efisiensi dan transparansi pendidikan tinggi.
+                        {{ $site_settings['login_subtitle'] ?? 'Platform manajemen akademik modern berbasis AI untuk efisiensi dan transparansi pendidikan tinggi.' }}
                     </p>
 
                     <div class="mt-8 flex justify-center gap-2">
