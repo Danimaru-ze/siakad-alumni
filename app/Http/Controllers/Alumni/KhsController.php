@@ -49,7 +49,7 @@ class KhsController extends Controller
         // Get current IPK
         $ipkData = $this->calculationService->calculateIPK($mahasiswa);
 
-        return view('mahasiswa.khs.index', compact('mahasiswa', 'semesterList', 'ipkData'));
+        return view('alumni.khs.index', compact('mahasiswa', 'semesterList', 'ipkData'));
     }
 
     public function show(TahunAkademik $tahunAkademik)
@@ -68,6 +68,6 @@ class KhsController extends Controller
             ->with('kelas.mataKuliah')
             ->get();
 
-        return view('mahasiswa.khs.show', compact('krs', 'ipsData', 'ipkData', 'nilaiList', 'tahunAkademik', 'mahasiswa'));
+        return view('alumni.khs.show', compact('krs', 'ipsData', 'ipkData', 'nilaiList', 'tahunAkademik', 'mahasiswa'));
     }
 }

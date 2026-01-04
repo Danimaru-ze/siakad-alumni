@@ -154,6 +154,23 @@ Route::middleware(['auth', 'is.alumni'])->prefix('alumni')->name('alumni.')->gro
     Route::get('tracer', [\App\Http\Controllers\Alumni\TracerStudyController::class, 'index'])->name('tracer.index');
     Route::get('tracer/{tracer}', [\App\Http\Controllers\Alumni\TracerStudyController::class, 'show'])->name('tracer.show');
     Route::post('tracer/{tracer}', [\App\Http\Controllers\Alumni\TracerStudyController::class, 'store'])->name('tracer.store.submit');
+
+    // CV Builder Routes
+    Route::prefix('cv-builder')->name('cv-builder.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Cv\CvBuilderController::class, 'index'])->name('index');
+        Route::post('/profile', [\App\Http\Controllers\Cv\CvBuilderController::class, 'updateProfile'])->name('profile.update');
+        
+        Route::post('/experience', [\App\Http\Controllers\Cv\CvBuilderController::class, 'storeExperience'])->name('experience.store');
+        Route::delete('/experience/{id}', [\App\Http\Controllers\Cv\CvBuilderController::class, 'destroyExperience'])->name('experience.destroy');
+        
+        Route::post('/education', [\App\Http\Controllers\Cv\CvBuilderController::class, 'storeEducation'])->name('education.store');
+        Route::delete('/education/{id}', [\App\Http\Controllers\Cv\CvBuilderController::class, 'destroyEducation'])->name('education.destroy');
+        
+        Route::post('/skill', [\App\Http\Controllers\Cv\CvBuilderController::class, 'storeSkill'])->name('skill.store');
+        Route::delete('/skill/{id}', [\App\Http\Controllers\Cv\CvBuilderController::class, 'destroySkill'])->name('skill.destroy');
+        
+        Route::get('/generate', [\App\Http\Controllers\Cv\CvBuilderController::class, 'generate'])->name('generate');
+    });
 });
 
 // --- ADMIN ROUTES ---

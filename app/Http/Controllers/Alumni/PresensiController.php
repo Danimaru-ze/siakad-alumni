@@ -52,7 +52,7 @@ class PresensiController extends Controller
         // Group by semester - sort by semester_order desc first so latest semester is first
         $rekapBySemester = $rekapList->sortByDesc('semester_order')->groupBy('semester');
 
-        return view('mahasiswa.presensi.index', compact('mahasiswa', 'rekapBySemester'));
+        return view('alumni.presensi.index', compact('mahasiswa', 'rekapBySemester'));
     }
 
     /**
@@ -91,6 +91,6 @@ class PresensiController extends Controller
 
         $rekap = $this->presensiService->getRekapPresensi($mahasiswa->id, $kelas->id);
 
-        return view('mahasiswa.presensi.show', compact('kelas', 'mahasiswa', 'pertemuanList', 'presensiData', 'rekap'));
+        return view('alumni.presensi.show', compact('kelas', 'mahasiswa', 'pertemuanList', 'presensiData', 'rekap'));
     }
 }
